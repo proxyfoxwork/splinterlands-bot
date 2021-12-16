@@ -1,5 +1,6 @@
 //'use strict';
 const puppeteer = require('puppeteer');
+const fs = require('fs');
 
 const splinterlandsPage = require('./splinterlandsPage');
 const user = require('./user');
@@ -100,6 +101,33 @@ async function launchBattle(page) {
             if (!isStartBattleSuccess) { await reload(page); await sleep(5000); retriesNum++; continue }
         
             findOpponentDialogStatus = await findSeekingEnemyModal(page);
+    // }
+    
+    // await page.goto('https://splinterlands.io/?p=battle_history');
+    // await page.waitForTimeout(8000);
+    // await closePopups(page);
+    // await closePopups(page);
+
+
+    // const ecr = await checkEcr(page);
+    // if(page.recoverStatus === 0) {
+    //     if (process.env.ECR_STOP_LIMIT && ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
+    //         page.recoverStatus = 1
+    //         //TODO Close app here
+    //         var textBattles = 'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal) + '';
+    //         var textDec = 'Total Earned: ' + totalDec + ' DEC ';
+    //         var textTime = new Date().toLocaleString();
+    //         await fs.appendFile('dailyBattles.txt',  textTime + textDec + winTotal + ' :win ' + loseTotal + ' :lose ' + '\r\n', function (err) {
+    //         if (err) throw err;
+    //         console.log('Saved!');
+    //         })
+    //         console.log(textBattles);
+    //         console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
+    //         console.log('Process end. Goodbye.')
+    //         // await browser.close();
+    //         process.exit();
+    //         // console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
+    //         // throw new Error(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}`);
         }
 
         if (findOpponentDialogStatus === 1 || findOpponentDialogStatus === 2) {
@@ -259,9 +287,9 @@ async function startBotPlayMatch(page, browser) {
         if (process.env.ECR_STOP_LIMIT && process.env.ECR_RECOVER_TO && ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
             if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
                 console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
-            } else if (ecr < parseFloat(process.env.ECR_RECOVER_TO)) {
+process.exit();            } else if (ecr < parseFloat(process.env.ECR_RECOVER_TO)) {
                 console.log(chalk.bold.red(`ECR Not yet Recovered to ${process.env.ECR_RECOVER_TO}`));
-            }
+process.exit();            }
             
             // calculating time needed for recovery
             ecrNeededToRecover = parseFloat(process.env.ECR_RECOVER_TO) - parseFloat(ecr);
@@ -269,6 +297,8 @@ async function startBotPlayMatch(page, browser) {
             
             console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${recoveryTimeInHours * 60} minutes.`));
             await closeBrowser(browser);
+
+            
             console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + recoveryTimeInHours * 3600 * 1000).toLocaleString()}`));
             await sleep(recoveryTimeInHours * 3600 * 1000);
     
@@ -417,28 +447,55 @@ async function startBotPlayMatch(page, browser) {
         await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
         await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
         await page.waitForTimeout(5000);
-            try {
-                const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
-                if (winner.trim() == account) {
-                    const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
-                    console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
-                    totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
-                    winTotal += 1;
-                }
-                else {
-                    console.log(chalk.red('You lost'));
-                    loseTotal += 1;
-                }
-            } catch {
-                console.log('Could not find winner - draw?');
-                undefinedTotal += 1;
-            }
-            await clickOnElement(page, '.btn--done', 20000, 10000);
-            await clickOnElement(page, '#menu_item_battle', 20000, 10000);
+            // try {
+            //     const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
+            //     if (winner.trim() == account) {
+            //         const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
+            //         console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
+            //         totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
+            //         winTotal += 1;
+            //     }
+            //     else {
+            //         console.log(chalk.red('You lost'));
+            //         loseTotal += 1;
+            //     }
+            // } catch {
+            //     console.log('Could not find winner - draw?');
+            //     undefinedTotal += 1;
+            // }
+            // await clickOnElement(page, '.btn--done', 20000, 10000);
+            // await clickOnElement(page, '#menu_item_battle', 20000, 10000);
 
-            console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
-            console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
+            // console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
+            // console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
             
+        try {
+			const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
+			if (winner.trim() == process.env.ACCOUNT.split('@')[0]) {
+				const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
+				console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
+                totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
+                winTotal += 1;
+                var textTime = new Date().toLocaleString();
+                fs.appendFile('dailyBattles.txt', textTime + decWon + '\r\n', function (err) {
+                    if (err) throw err;
+                    console.log('Saved!');
+                    })
+			}
+			else {
+                console.log(chalk.red('You lost'));
+                loseTotal += 1;
+			}
+		} catch {
+			console.log('Could not find winner - draw?');
+            undefinedTotal += 1;
+		}
+		await clickOnElement(page, '.btn--done', 20000, 10000);
+		await clickOnElement(page, '#menu_item_battle', 20000, 10000);
+
+        console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
+        console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
+        
     } catch (e) {
             console.log('Error handling browser not opened, internet connection issues, or battle cannot start:', e)
     }
@@ -539,6 +596,7 @@ async function run() {
                 if (isMultiAccountMode) {
                     start = false;
                     await closeBrowser(browser);
+
                 } else {
                     await page.waitForTimeout(5000);
                     console.log(account, 'waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString());

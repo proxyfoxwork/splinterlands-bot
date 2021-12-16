@@ -66,6 +66,8 @@ async function startMulti() {
         await console.log('waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString(), '\n');
         await sleep(sleepingTime);
         count++;
+        process.exit();
+
     }
 }
 
@@ -81,6 +83,7 @@ async function startSingle() {
 
     setupAccount(account, password, isMultiAccountMode);
     await run();
+    process.exit();
 }
 
 (async()=> {
